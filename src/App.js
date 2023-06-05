@@ -2,6 +2,7 @@ import "./App.css";
 import { useState } from "react";
 import { v4 as uuid } from "uuid";
 import plus from "./image/plus.png";
+import vector from "./image/vector.png"
 
 // button-group
 const buttons = [
@@ -23,21 +24,26 @@ const itemsData = [
   {
     key: uuid(),
     label: "Have fun",
+    status: "todo"
+    
   },
   {
     key: uuid(),
     label: "Spread Empathy",
+    status: "todo"
   },
   {
     key: uuid(),
     label: "Generate Value",
+    status: "todo"
   },
 ];
 
 function App() {
   const [value, setValue] = useState("");
   const [items, setItems] = useState(itemsData);
-  const [type, setType] = useState("all");
+  const [type, setType] = useState("todo");
+
 
   const handleChangeValue = (event) => {
     setValue(event.target.value);
@@ -49,11 +55,23 @@ function App() {
     const newItem = {
       key: uuid(),
       label: value,
+      status: "todo"
     };
     const newItems = [newItem, ...items];
 
     setItems(newItems);
+ 
   };
+
+  const changeStatus = (key, status) => {
+    setItems(prev => prev.map(item => {
+      if (item.key === key) {
+        return {...item, status: status}
+      }
+      return item
+    }))
+
+  }
 
   const handleItemDone = (keyFromLabel) => {
     const index = items.findIndex((item) => item.key === keyFromLabel); //3
@@ -61,7 +79,7 @@ function App() {
 
     //isMyObject Done?true or false
 
-    const newObj = { ...oldObj, isDone: !oldObj.isDone }; //=>{key:key,label:label,isDone:true}
+    const newObj = { ...oldObj, status: 'done' }; //=>{key:key,label:label,isDone:true}
 
     const leftPart = items.slice(0, index);
     const rightPart = items.slice(index + 1, items.length);
@@ -71,17 +89,20 @@ function App() {
     setItems(newItems);
   };
 
+  const deleteForever = key => {
+    setItems(prev => prev.filter(item => item.key !== key))
+  }
+
   const handleChangeStatus = (typeFromButton) => {
-    // all || active || done
     setType(typeFromButton);
   };
 
   const filteredItems =
     type === "todo"
-      ? items
+      ? items.filter((item) => item.status === 'todo')
       : type === "done"
-      ? items.filter((item) => item.isDone)
-      : items.filter((item) => !item.isDone);
+      ? items.filter((item) => item.status === 'done')
+      : items.filter((item) => item.status === 'trash');
 
   return (
     <div className="todo-app">
@@ -119,20 +140,29 @@ function App() {
       <ul className="todoList list-group todo-list">
         {filteredItems.map((item) => (
           <li key={item.key} className="listItem list-group-item">
-            <span className={`todo-list-item ${item.isDone ? "done" : ""}`}>
-              <input type="checkbox"></input>
+            <span className={`todo-list-item ${item.status === 'done' ? "done" : ""}`}>
+              <input type="checkbox" 
+              ></input>
               <span
                 className="todo-list-item-label"
-                onClick={() => handleItemDone(item.key)}
+                onClick={() => changeStatus(item.key, 'done')}
               >
                 {item.label}
               </span>
               <button
                 type="button"
                 className="btn btn-outline-danger btn-sm float-right"
+                onClick={() => changeStatus(item.key, 'trash')}
               >
                 <i className="fa fa-trash-o" />
               </button>
+              {item.status === 'trash' && (
+                <button className="btn btn-outline-danger btn-sm float-right"
+                onClick={() => changeStatus(item.key, 'todo')}
+                > <i class="fa fa-check-square" aria-hidden="true"></i>
+                
+                </button>
+              )}
             </span>
           </li>
         ))}
@@ -149,6 +179,7 @@ function App() {
         <button className="btn btn-outline-secondary" onClick={handleAddItem}>
           Add item
         </button>
+      
       </div>
     </div>
   );
